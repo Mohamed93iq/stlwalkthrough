@@ -23,7 +23,7 @@
   {
     "id": "m_house1",
     "name": "أول بيت في البريد الاولى",
-    "folder": "House1",
+    "folder": "house1",
     "unit": 1,
     "parts": [
       { "name": "حيطان", "file": "walls.stl",    "color": "#d9d5cc", "structure": true },
