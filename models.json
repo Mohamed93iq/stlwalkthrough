@@ -27,9 +27,7 @@
     "unit": 1,
     "parts": [
       { "name": "حيطان", "file": "walls.stl",    "color": "#d9d5cc", "structure": true },
-      { "name": "إنارة", "file": "lighting.stl", "color": "#ff5a45" },
-      { "name": "باور",  "file": "power.stl",    "color": "#3d8bff" },
-      { "name": "علب",   "file": "boxes.stl",    "color": "#8c95a3" }
+      { "name": "إنارة", "file": "lighting.stl", "color": "#ff5a45" }
     ]
   }
 ]
