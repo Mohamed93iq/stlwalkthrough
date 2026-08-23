@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>مكتبة النماذج — رفع STL وجولة داخلية</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0d1117; --slab:#161c24; --slab2:#1c242e;
+    --line:#2b3644; --paper:#d8dee6; --dim:#7d8b9c;
+    --hot:#ff5a45; --cool:#3d8bff; --warm:#ffc247;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:var(--ink);color:var(--paper)}
+  body{font-family:"IBM Plex Sans Arabic",system-ui,sans-serif;overflow:hidden}
+  button{font-family:inherit;cursor:pointer}
+
+  #panel{position:fixed;inset:0;overflow-y:auto;padding:26px 18px 60px;-webkit-overflow-scrolling:touch}
+  .wrap{max-width:820px;margin:0 auto}
+  header{border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:26px}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.24em;
+    color:var(--dim);text-transform:uppercase;direction:ltr;text-align:right;margin-bottom:8px}
+  h1{font-size:clamp(20px,4.4vw,28px);font-weight:600}
+  header p{color:var(--dim);font-size:13px;margin-top:7px;line-height:1.7}
+
+  .tabs{display:flex;margin-bottom:16px;border:1px solid var(--line);border-radius:3px;overflow:hidden}
+  .tabs button{flex:1;background:var(--slab);border:0;color:var(--dim);padding:11px;font-size:13.5px}
+  .tabs button.on{background:var(--slab2);color:var(--paper);box-shadow:inset 0 -2px 0 var(--hot)}
+
+  .card{background:var(--slab);border:1px solid var(--line);border-radius:3px;padding:18px;margin-bottom:14px}
+  #drop{border:1px dashed var(--line);border-radius:3px;padding:34px 18px;text-align:center;transition:.18s;cursor:pointer}
+  #drop.hot{border-color:var(--hot);background:#1a2029}
+  #drop .big{font-size:15px;margin-bottom:6px}
+  #drop .sub{font-size:12px;color:var(--dim);line-height:1.8}
+
+  label{display:block;font-size:12px;color:var(--dim);margin:14px 0 6px}
+  input[type=text],input[type=url]{width:100%;background:var(--ink);border:1px solid var(--line);
+    border-radius:3px;color:var(--paper);padding:11px 12px;font-family:inherit;font-size:14px}
+  input:focus{outline:none;border-color:var(--cool)}
+  .units{display:flex;gap:8px;margin-top:6px}
+  .units button{flex:1;background:var(--ink);border:1px solid var(--line);border-radius:3px;color:var(--dim);padding:10px;font-size:13px}
+  .units button.on{border-color:var(--warm);color:var(--warm)}
+  .primary{width:100%;margin-top:16px;background:var(--hot);color:#140b09;border:0;border-radius:3px;padding:13px;font-size:14.5px;font-weight:600}
+  .primary:disabled{background:var(--slab2);color:var(--dim)}
+
+  .grouphead{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.2em;color:var(--dim);
+    direction:ltr;text-align:right;margin:6px 0 10px}
+  .item{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--line)}
+  .item:last-child{border-bottom:0}
+  .thumb{width:42px;height:42px;flex:none;border:1px solid var(--line);border-radius:3px;display:grid;
+    place-items:center;color:var(--dim);font-size:9px;letter-spacing:.08em;font-family:"IBM Plex Mono",monospace;background:var(--ink)}
+  .thumb.srv{border-color:var(--cool);color:var(--cool)}
+  .meta{flex:1;min-width:0}
+  .meta b{display:block;font-weight:500;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .meta small{color:var(--dim);font-size:11px;font-family:"IBM Plex Mono",monospace;direction:ltr;display:block;margin-top:3px}
+  .acts{display:flex;gap:6px;flex:none}
+  .acts button{background:var(--slab2);border:1px solid var(--line);border-radius:3px;color:var(--paper);padding:8px 11px;font-size:12px}
+  .acts .open{border-color:var(--cool);color:var(--cool)}
+  .acts .del{color:var(--dim)}
+  .empty{color:var(--dim);font-size:13px;text-align:center;padding:26px 0;line-height:1.9}
+  .note{font-size:11.5px;color:var(--dim);line-height:1.85;margin-top:12px}
+  .note b{color:var(--warm);font-weight:500}
+  pre{background:var(--ink);border:1px solid var(--line);border-radius:3px;padding:12px;overflow-x:auto;
+    font-family:"IBM Plex Mono",monospace;font-size:11.5px;direction:ltr;text-align:left;color:var(--paper);margin-top:10px}
+
+  #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--slab2);
+    border:1px solid var(--line);border-radius:3px;padding:11px 20px;font-size:13px;opacity:0;transition:.25s;
+    pointer-events:none;z-index:60;max-width:90vw;text-align:center}
+  #toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+  #toast.err{border-color:var(--hot);color:var(--hot)}
+
+  #viewer{position:fixed;inset:0;display:none}
+  #viewer canvas{display:block}
+  #vhud{position:absolute;inset:0;pointer-events:none}
+  .vtop{position:absolute;top:0;left:0;right:0;padding:14px 16px;display:flex;align-items:center;gap:10px;
+    background:linear-gradient(to bottom,rgba(13,17,23,.9),transparent);pointer-events:auto}
+  .vtop .name{flex:1;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .chip{background:rgba(22,28,36,.85);border:1px solid var(--line);border-radius:3px;color:var(--paper);
+    padding:8px 12px;font-size:12px;-webkit-tap-highlight-color:transparent}
+  .chip.on{border-color:var(--warm);color:var(--warm)}
+  #vloading{position:absolute;inset:0;display:grid;place-items:center;background:var(--ink);
+    font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.15em;color:var(--dim);z-index:5;text-align:center;padding:24px}
+  #vstart{position:absolute;inset:0;display:grid;place-items:center;background:rgba(13,17,23,.86);z-index:4;
+    pointer-events:auto;text-align:center;padding:24px;cursor:pointer}
+  #vstart div{max-width:26ch;line-height:1.9;font-size:14px}
+  #vstart span{display:block;margin-top:14px;font-size:12px;color:var(--dim)}
+  #parts{position:absolute;top:60px;left:16px;right:16px;display:flex;flex-wrap:wrap;gap:6px;
+    justify-content:flex-start;pointer-events:auto}
+  .chip.layer{display:inline-flex;align-items:center;gap:7px;opacity:.42;padding:7px 11px;font-size:12px}
+  .chip.layer.on{opacity:1}
+  .chip.layer i{width:11px;height:11px;border-radius:2px;flex:none}
+  #stick{position:absolute;width:124px;height:124px;border-radius:50%;border:1px solid var(--line);
+    background:rgba(22,28,36,.4);opacity:0;pointer-events:none}
+  #stick i{position:absolute;top:50%;left:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;
+    background:rgba(216,222,230,.26);border:1px solid var(--line)}
+  kbd{font-family:"IBM Plex Mono",monospace;background:var(--slab);border:1px solid var(--line);
+    border-bottom-width:2px;border-radius:3px;padding:1px 6px;font-size:11px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div id="panel">
+ <div class="wrap">
+  <header>
+    <div class="eyebrow">model library · self hosted</div>
+    <h1>مكتبة النماذج</h1>
+    <p>ارفع ملف STL واحصل على رابط جولة داخلية يفتح بأي متصفح — كمبيوتر أو موبايل.</p>
+  </header>
+
+  <div class="tabs">
+    <button id="tabFile" class="on">رفع ملف</button>
+    <button id="tabUrl">من رابط خارجي</button>
+  </div>
+
+  <div class="card" id="paneFile">
+    <div id="drop">
+      <div class="big">اسحب ملف STL هنا</div>
+      <div class="sub">أو اضغط للاختيار — تكدر تختار عدة ملفات مرة وحدة<br>كل ملف يصير طبقة بلون مستقل</div>
+      <input type="file" id="fileInput" accept=".stl" multiple hidden>
+    </div>
+    <div id="fileInfo" class="note"></div>
+  </div>
+
+  <div class="card" id="paneUrl" style="display:none">
+    <label for="urlInput">رابط مباشر لملف STL</label>
+    <input type="url" id="urlInput" placeholder="https://.../house.stl" dir="ltr">
+    <div class="note">أي رابط مباشر ينفع — GitHub Raw، Cloudflare R2، أو ملف داخل موقعك نفسه مثل <b>models/house.stl</b>.</div>
+  </div>
+
+  <div class="card">
+    <label for="nameInput">اسم النموذج</label>
+    <input type="text" id="nameInput" placeholder="بيت الكرادة — تأسيس كهربائي">
+    <label for="folderInput">اسم المجلد داخل models/ <span style="color:#ff5a45">(بالإنكليزي)</span></label>
+    <input type="text" id="folderInput" placeholder="villa-karrada" dir="ltr">
+    <div class="note">كل منزل بمجلد لحاله: <b>models/villa-karrada/walls.stl</b> — يمنع تضارب الأسماء بين المنازل.</div>
+
+    <label>وحدة القياس بالملف</label>
+    <div class="units" id="units">
+      <button data-u="0.001">مليمتر</button>
+      <button data-u="0.01">سنتيمتر</button>
+      <button data-u="1" class="on">متر</button>
+    </div>
+    <div class="note">STL ما يخزّن الوحدة. إذا طلع البيت بحجم علبة كبريت أو بحجم ملعب، بدّل الوحدة وأعد الإضافة.</div>
+    <button class="primary" id="addBtn" disabled>أضف وأعطني الرابط</button>
+  </div>
+
+  <div class="card">
+    <div class="grouphead">ON THE SERVER · الرابط يشتغل للجميع</div>
+    <div id="listServer"><div class="empty">لا يوجد نماذج بملف models.json</div></div>
+  </div>
+
+  <div class="card">
+    <div class="grouphead">ON THIS DEVICE · محفوظ بمتصفحك فقط</div>
+    <div id="listLocal"><div class="empty">لا يوجد شي بعد.<br>ارفع أول ملف من فوق.</div></div>
+    <div class="note"><b>مهم:</b> النماذج اللي ترفعها من البنل تنحفظ بمتصفح جهازك، فالرابط ما يشتغل عند غيرك. لتخليه دائم للجميع: حط ملف STL بمجلد <b>models/</b> وأضف سطره بملف <b>models.json</b> — اضغط «نسخ السطر» تحت كل نموذج.</div>
+  </div>
+ </div>
+</div>
+
+<div id="viewer">
+  <div id="vhud">
+    <div class="vtop">
+      <button class="chip" id="backBtn">رجوع</button>
+      <div class="name" id="vname"></div>
+      <button class="chip" id="xrayBtn">شفاف</button>
+      <button class="chip" id="wireBtn">شبكي</button>
+      <button class="chip" id="clipBtn">قص</button>
+    </div>
+    <div id="parts"></div>
+    <div id="stick"><i></i></div>
+  </div>
+  <div id="vstart"><div>اضغط للبدء<span>الكيبورد: <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> والماوس · <kbd>F</kbd> يطفي التصادم<br>الموبايل: إصبع لليسار للمشي، لليمين للنظر</span></div></div>
+  <div id="vloading">LOADING…</div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+'use strict';
+
+// =====================================================================
+//  1. LOCAL STORE (IndexedDB) — works on any static host, per browser
+// =====================================================================
+const DB_NAME = 'stl-library', STORE = 'models';
+let dbp = null;
+function db(){
+  if(dbp) return dbp;
+  dbp = new Promise((res, rej)=>{
+    const rq = indexedDB.open(DB_NAME, 1);
+    rq.onupgradeneeded = ()=> rq.result.createObjectStore(STORE, {keyPath:'id'});
+    rq.onsuccess = ()=> res(rq.result);
+    rq.onerror = ()=> rej(rq.error);
+  });
+  return dbp;
+}
+async function idbAll(){
+  const d = await db();
+  return new Promise((res,rej)=>{
+    const rq = d.transaction(STORE).objectStore(STORE).getAll();
+    rq.onsuccess = ()=> res(rq.result || []); rq.onerror = ()=> rej(rq.error);
+  });
+}
+async function idbGet(id){
+  const d = await db();
+  return new Promise((res,rej)=>{
+    const rq = d.transaction(STORE).objectStore(STORE).get(id);
+    rq.onsuccess = ()=> res(rq.result || null); rq.onerror = ()=> rej(rq.error);
+  });
+}
+async function idbPut(rec){
+  const d = await db();
+  return new Promise((res,rej)=>{
+    const tx = d.transaction(STORE,'readwrite');
+    tx.objectStore(STORE).put(rec);
+    tx.oncomplete = ()=> res(true); tx.onerror = ()=> rej(tx.error);
+  });
+}
+async function idbDel(id){
+  const d = await db();
+  return new Promise((res,rej)=>{
+    const tx = d.transaction(STORE,'readwrite');
+    tx.objectStore(STORE).delete(id);
+    tx.oncomplete = ()=> res(true); tx.onerror = ()=> rej(tx.error);
+  });
+}
+
+// =====================================================================
+//  2. SERVER MANIFEST (models.json)
+// =====================================================================
+let manifest = [];
+
+// models/<folder>/<file> — a bare name resolves inside the model's own folder
+function resolvePath(file, folder){
+  if(/^(https?:)?\/\//i.test(file) || file.startsWith('models/') || file.startsWith('/')) return file;
+  return 'models/' + (folder ? folder.replace(/^\/|\/$/g,'') + '/' : '') + file;
+}
+const slugify = s => (s||'').trim().toLowerCase()
+  .replace(/[^\w\u0600-\u06FF-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40) || 'model';
+async function loadManifest(){
+  try{
+    const r = await fetch('models.json', {cache:'no-store'});
+    if(!r.ok) return [];
+    const j = await r.json();
+    return Array.isArray(j) ? j : (j.models || []);
+  }catch(e){ return []; }
+}
+
+// =====================================================================
+//  3. STL PARSER (binary + ascii)
+// =====================================================================
+function parseSTL(buf){
+  const dv = new DataView(buf);
+  let binary = false;
+  if(buf.byteLength >= 84 && 84 + dv.getUint32(80,true)*50 === buf.byteLength) binary = true;
+  const pos = [];
+  if(binary){
+    const n = dv.getUint32(80,true); let o = 84;
+    for(let i=0;i<n;i++){
+      o += 12;
+      for(let v=0;v<3;v++){ pos.push(dv.getFloat32(o,true), dv.getFloat32(o+4,true), dv.getFloat32(o+8,true)); o += 12; }
+      o += 2;
+    }
+  }else{
+    const txt = new TextDecoder().decode(buf);
+    const re = /vertex\s+(-?[\d.eE+-]+)\s+(-?[\d.eE+-]+)\s+(-?[\d.eE+-]+)/g;
+    let m; while((m = re.exec(txt))) pos.push(+m[1], +m[2], +m[3]);
+  }
+  if(!pos.length) throw new Error('ملف STL غير صالح أو فارغ');
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos), 3));
+  g.computeVertexNormals();
+  return g;
+}
+
+// =====================================================================
+//  4. PANEL
+// =====================================================================
+const $ = s => document.querySelector(s);
+const panel = $('#panel'), viewer = $('#viewer');
+let pending = null, mode = 'file', unit = 1;
+
+function toast(msg, err){
+  const t = $('#toast'); t.textContent = msg; t.classList.toggle('err', !!err);
+  t.classList.add('on'); clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove('on'), 3000);
+}
+const fmt = b => b < 1048576 ? (b/1024).toFixed(0)+' KB' : (b/1048576).toFixed(1)+' MB';
+const unitLbl = u => u === 1 ? 'M' : (u === 0.01 ? 'CM' : 'MM');
+
+$('#tabFile').onclick = ()=>{ mode='file'; $('#tabFile').classList.add('on'); $('#tabUrl').classList.remove('on');
+  $('#paneFile').style.display=''; $('#paneUrl').style.display='none'; refreshBtn(); };
+$('#tabUrl').onclick = ()=>{ mode='url'; $('#tabUrl').classList.add('on'); $('#tabFile').classList.remove('on');
+  $('#paneUrl').style.display=''; $('#paneFile').style.display='none'; refreshBtn(); };
+
+document.querySelectorAll('#units button').forEach(b=>{
+  b.onclick = ()=>{ document.querySelectorAll('#units button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on'); unit = parseFloat(b.dataset.u); };
+});
+
+const drop = $('#drop'), fileInput = $('#fileInput');
+drop.onclick = ()=> fileInput.click();
+['dragover','dragenter'].forEach(e=>drop.addEventListener(e, ev=>{ev.preventDefault();drop.classList.add('hot')}));
+['dragleave','drop'].forEach(e=>drop.addEventListener(e, ev=>{ev.preventDefault();drop.classList.remove('hot')}));
+drop.addEventListener('drop', ev=>{ if(ev.dataTransfer.files.length) takeFiles(ev.dataTransfer.files); });
+fileInput.onchange = ()=>{ if(fileInput.files.length) takeFiles(fileInput.files); };
+
+const PALETTE = [
+  {key:['wall','حيط','جدار','structure'], color:'#d9d5cc', label:'حيطان', structure:true},
+  {key:['light','lighting','انار','إنار'],  color:'#ff5a45', label:'إنارة'},
+  {key:['power','socket','باور','فيش'],     color:'#3d8bff', label:'باور'},
+  {key:['data','net','داتا','شبك'],         color:'#ffc247', label:'داتا'},
+  {key:['box','device','علب','مفتاح'],      color:'#8c95a3', label:'علب'}
+];
+const SPARE = ['#5ed6a0','#c07dff','#ff9d4d','#4fd8e8'];
+
+function classify(filename, i){
+  const n = filename.toLowerCase();
+  for(const p of PALETTE) if(p.key.some(k=>n.includes(k)))
+    return {color:p.color, label:p.label, structure:!!p.structure};
+  return {color: SPARE[i % SPARE.length], label: filename.replace(/\.stl$/i,''), structure: i === 0};
+}
+
+function takeFiles(files){
+  const list = [...files].filter(f=>/\.stl$/i.test(f.name));
+  if(!list.length) return toast('اختر ملفات STL', true);
+  let done = 0; pending = [];
+  list.forEach((f, i)=>{
+    const r = new FileReader();
+    r.onload = ()=>{
+      const c = classify(f.name, i);
+      pending[i] = {name:c.label, file:f.name, color:c.color, structure:c.structure, size:f.size, buf:r.result};
+      if(++done === list.length){
+        $('#fileInfo').innerHTML = pending.map(p=>
+          `<span style="color:${p.color}">■</span> ${p.file} · ${fmt(p.size)}`).join('<br>');
+        if(!$('#nameInput').value) $('#nameInput').value = list[0].name.replace(/\.stl$/i,'');
+        if(!$('#folderInput').value) $('#folderInput').value = slugify(list[0].name.replace(/\.stl$/i,''));
+        refreshBtn();
+      }
+    };
+    r.onerror = ()=> toast('تعذّرت قراءة ' + f.name, true);
+    r.readAsArrayBuffer(f);
+  });
+}
+
+$('#urlInput').oninput = refreshBtn;
+function refreshBtn(){
+  const ready = mode === 'file' ? !!(pending && pending.length) : /\S/.test($('#urlInput').value.trim());
+  $('#addBtn').disabled = !ready;
+}
+
+$('#addBtn').onclick = async ()=>{
+  const btn = $('#addBtn'); btn.disabled = true; btn.textContent = 'جاري الحفظ…';
+  const id = 'l_' + Math.random().toString(36).slice(2,9);
+  const rec = {
+    id, name: $('#nameInput').value.trim() || 'نموذج بدون اسم',
+    folder: slugify($('#folderInput').value || $('#nameInput').value),
+    unit, added: Date.now()
+  };
+  try{
+    if(mode === 'file'){
+      rec.kind = 'data';
+      rec.size = pending.reduce((a,p)=>a+p.size, 0);
+      rec.parts = pending.map(p=>({name:p.name, file:p.file, color:p.color, structure:p.structure, buf:p.buf}));
+    } else {
+      const u = $('#urlInput').value.trim();
+      rec.kind = 'url';
+      rec.parts = [{name:'الموديل', file:u, color:'#d9d5cc', structure:true}];
+    }
+    await idbPut(rec);
+    pending = null; fileInput.value=''; $('#urlInput').value=''; $('#nameInput').value=''; $('#folderInput').value='';
+    $('#fileInfo').textContent = '';
+    await renderList();
+    copyLink(id);
+    toast('انضاف — الرابط انتسخ');
+  }catch(e){ toast(e.message || 'صار خطأ بالحفظ', true); }
+  btn.textContent = 'أضف وأعطني الرابط'; refreshBtn();
+};
+
+const linkFor = id => location.origin + location.pathname + '#/v/' + id;
+function copyLink(id){
+  const l = linkFor(id);
+  if(navigator.clipboard) navigator.clipboard.writeText(l).catch(()=>{});
+}
+function copyText(t){ if(navigator.clipboard) navigator.clipboard.writeText(t).catch(()=>{}); }
+
+function row(rec, onServer){
+  const el = document.createElement('div'); el.className = 'item';
+  el.innerHTML = `
+    <div class="thumb ${onServer?'srv':''}">${onServer?'SRV':(rec.kind==='url'?'URL':'STL')}</div>
+    <div class="meta"><b></b><small>${rec.folder?'models/'+rec.folder+'/ · ':''}${unitLbl(rec.unit)} · ${rec.parts?rec.parts.length+' layers':''} ${rec.kind==='data'?fmt(rec.size):''}</small></div>
+    <div class="acts"></div>`;
+  el.querySelector('b').textContent = rec.name;
+  const acts = el.querySelector('.acts');
+
+  const open = document.createElement('button'); open.className='open'; open.textContent='تجول';
+  open.onclick = ()=> location.hash = '#/v/' + rec.id;
+  acts.appendChild(open);
+
+  const cp = document.createElement('button'); cp.textContent='نسخ';
+  cp.onclick = ()=>{ copyLink(rec.id); toast('الرابط انتسخ'); };
+  acts.appendChild(cp);
+
+  if(!onServer){
+    if(rec.kind === 'data'){
+      const dl = document.createElement('button'); dl.textContent='JSON';
+      dl.onclick = ()=>{
+        copyText(JSON.stringify({
+          id: rec.id.replace('l_','m_'), name: rec.name,
+          folder: rec.folder || slugify(rec.name), unit: rec.unit,
+          parts: (rec.parts||[]).map(p=>({name:p.name, file:p.file, color:p.color, structure:!!p.structure}))
+        }, null, 2));
+        toast('السطر انتسخ — الصقه بملف models.json');
+      };
+      acts.appendChild(dl);
+    }
+    const del = document.createElement('button'); del.className='del'; del.textContent='حذف';
+    del.onclick = async ()=>{ await idbDel(rec.id); renderList(); toast('انحذف'); };
+    acts.appendChild(del);
+  }
+  return el;
+}
+
+async function renderList(){
+  manifest = await loadManifest();
+  const srv = $('#listServer'); srv.innerHTML = '';
+  if(!manifest.length) srv.innerHTML = '<div class="empty">لا يوجد نماذج بملف models.json</div>';
+  else manifest.forEach(m=>{
+    const raw = m.parts || [{name:m.name, file:m.file, color:'#d9d5cc', structure:true}];
+    const parts = raw.map(p=>({...p, file: resolvePath(p.file, m.folder)}));
+    srv.appendChild(row({id:m.id, name:m.name, folder:m.folder, unit:m.unit||1, kind:'url', parts}, true));
+  });
+
+  const loc = $('#listLocal'); const items = (await idbAll()).sort((a,b)=>b.added-a.added);
+  loc.innerHTML = '';
+  if(!items.length) loc.innerHTML = '<div class="empty">لا يوجد شي بعد.<br>ارفع أول ملف من فوق.</div>';
+  else items.forEach(r=> loc.appendChild(row(r, false)));
+}
+
+// =====================================================================
+//  5. VIEWER
+// =====================================================================
+let renderer, scene, camera, grid, raf = null;
+let meshes = [], hitList = [];
+let yaw = 0, pitch = 0, running = false, collide = true, eye = 1.7, xrayOn = false;
+const keys = Object.create(null);
+let stickV = {x:0,y:0}, moveId = null, lookId = null, stickO = {x:0,y:0}, lookLast = {x:0,y:0};
+const rayF = new THREE.Raycaster(), rayD = new THREE.Raycaster();
+const DOWN = new THREE.Vector3(0,-1,0);
+const isTouch = matchMedia('(pointer:coarse)').matches || 'ontouchstart' in window;
+const clipPlane = new THREE.Plane(new THREE.Vector3(0,-1,0), 3);
+let wire = false, clipped = false;
+const clock = new THREE.Clock();
+
+function initGL(){
+  if(renderer) return;
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0d1117);
+  camera = new THREE.PerspectiveCamera(72, innerWidth/innerHeight, 0.03, 800);
+  renderer = new THREE.WebGLRenderer({antialias:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.localClippingEnabled = true;
+  viewer.insertBefore(renderer.domElement, viewer.firstChild);
+  scene.add(new THREE.HemisphereLight(0xcfe0f5, 0x2a2f38, 0.9));
+  const a = new THREE.DirectionalLight(0xfff2dd, 0.95); a.position.set(8,14,6); scene.add(a);
+  const b = new THREE.DirectionalLight(0x9fc0ff, 0.35); b.position.set(-7,5,-8); scene.add(b);
+  bindViewer();
+}
+
+async function openModel(id){
+  panel.style.display = 'none'; viewer.style.display = 'block';
+  $('#vloading').style.display = 'grid'; $('#vloading').textContent = 'LOADING…';
+  $('#vstart').style.display = 'none';
+  initGL(); resize();
+
+  let rec = null;
+  if(id.startsWith('l_')) rec = await idbGet(id);
+  else{
+    if(!manifest.length) manifest = await loadManifest();
+    const m = manifest.find(x=>x.id === id);
+    if(m){
+      const raw = m.parts || [{name:m.name, file:m.file, color:'#d9d5cc', structure:true}];
+      rec = {
+        id:m.id, name:m.name, folder:m.folder, unit:m.unit||1, kind:'url',
+        parts: raw.map(p=>({...p, file: resolvePath(p.file, m.folder)}))
+      };
+    }
+  }
+  if(!rec){ $('#vloading').textContent = 'النموذج غير موجود'; return; }
+  $('#vname').textContent = rec.name;
+  const parts = rec.parts || [];
+  if(!parts.length){ $('#vloading').textContent = 'النموذج فارغ'; return; }
+
+  // clear the previous model
+  meshes.forEach(m=>{ scene.remove(m); m.geometry.dispose(); m.material.dispose(); });
+  meshes = []; hitList = [];
+  if(grid) scene.remove(grid);
+
+  const whole = new THREE.Box3();
+  const built = [];
+  for(let i=0;i<parts.length;i++){
+    const p = parts[i];
+    $('#vloading').textContent = `LOADING ${i+1}/${parts.length}…`;
+    let buf;
+    try{
+      if(p.buf) buf = p.buf;
+      else{
+        const r = await fetch(p.file);
+        if(!r.ok) throw new Error('تعذّر جلب ' + p.file + ' (' + r.status + ')');
+        buf = await r.arrayBuffer();
+      }
+    }catch(e){ $('#vloading').textContent = e.message; return; }
+
+    let geo;
+    try{ geo = parseSTL(buf); }
+    catch(e){ $('#vloading').textContent = p.file + ': ' + e.message; return; }
+    geo.scale(rec.unit, rec.unit, rec.unit);
+    geo.computeBoundingBox();
+    whole.union(geo.boundingBox);
+    built.push({p, geo});
+  }
+
+  // one shared origin for every layer, so they stay aligned
+  const c = new THREE.Vector3(); whole.getCenter(c);
+  const offset = new THREE.Vector3(-c.x, -whole.min.y, -c.z);
+  built.forEach(({p, geo})=>{
+    geo.translate(offset.x, offset.y, offset.z);
+    const mat = new THREE.MeshLambertMaterial({
+      color: new THREE.Color(p.color || '#d9d5cc'),
+      side: THREE.DoubleSide,
+      transparent: true, opacity: 1
+    });
+    if(!p.structure) mat.emissive = new THREE.Color(p.color || '#ffffff').multiplyScalar(0.28);
+    const m = new THREE.Mesh(geo, mat);
+    m.userData = {name:p.name || 'طبقة', color:p.color, structure:!!p.structure};
+    scene.add(m); meshes.push(m);
+  });
+
+  const size = new THREE.Vector3(); whole.getSize(size);
+  eye = Math.min(1.7, Math.max(0.35, size.y*0.5));
+  camera.position.set(0, eye, size.z*0.5 + 1.5);
+  yaw = 0; pitch = 0;   // face the model from the south
+  scene.fog = new THREE.Fog(0x0d1117, size.length()*0.7, size.length()*2.4);
+  clipPlane.constant = size.y*0.75;
+  applyMaterials();
+  buildPartChips();
+
+  grid = new THREE.GridHelper(Math.max(20, size.length()*1.6), 32, 0x2b3644, 0x1c242e);
+  grid.position.y = -0.003; scene.add(grid);
+
+  $('#vloading').style.display = 'none';
+  $('#vstart').style.display = 'grid';
+  if(!raf) loop();
+}
+
+function applyMaterials(){
+  meshes.forEach(m=>{
+    m.material.wireframe = wire;
+    m.material.clippingPlanes = clipped ? [clipPlane] : null;
+    m.material.opacity = (xrayOn && m.userData.structure) ? 0.16 : 1;
+    m.material.depthWrite = m.material.opacity > 0.95;
+    m.material.needsUpdate = true;
+  });
+  hitList = meshes.filter(m=>m.visible);
+}
+
+function buildPartChips(){
+  const box = $('#parts'); box.innerHTML = '';
+  meshes.forEach(m=>{
+    const b = document.createElement('button');
+    b.className = 'chip layer on';
+    b.innerHTML = `<i style="background:${m.userData.color||'#d9d5cc'}"></i>${m.userData.name}`;
+    b.onclick = ()=>{
+      m.visible = !m.visible;
+      b.classList.toggle('on', m.visible);
+      hitList = meshes.filter(x=>x.visible);
+    };
+    box.appendChild(b);
+  });
+}
+
+function bindViewer(){
+  const cv = renderer.domElement;
+  $('#backBtn').onclick = ()=> location.hash = '';
+  $('#wireBtn').onclick = e=>{ wire = !wire; applyMaterials(); e.currentTarget.classList.toggle('on', wire); };
+  $('#clipBtn').onclick = e=>{ clipped = !clipped; applyMaterials(); e.currentTarget.classList.toggle('on', clipped); };
+  $('#xrayBtn').onclick = e=>{ xrayOn = !xrayOn; applyMaterials(); e.currentTarget.classList.toggle('on', xrayOn); };
+  $('#vstart').onclick = ()=>{ $('#vstart').style.display='none'; running = true; if(!isTouch) cv.requestPointerLock(); };
+
+  document.addEventListener('pointerlockchange', ()=>{
+    if(!isTouch) running = document.pointerLockElement === cv;
+    if(!running && viewer.style.display === 'block') $('#vstart').style.display = 'grid';
+  });
+  document.addEventListener('mousemove', e=>{
+    if(!running || isTouch) return;
+    yaw -= e.movementX*0.0022; pitch -= e.movementY*0.0022;
+    pitch = Math.max(-1.35, Math.min(1.35, pitch));
+  });
+  addEventListener('keydown', e=>{ keys[e.code]=true; if(e.code==='KeyF') collide = !collide; });
+  addEventListener('keyup', e=>{ keys[e.code]=false; });
+
+  const stick = $('#stick'), knob = stick.firstElementChild;
+  cv.addEventListener('touchstart', e=>{
+    e.preventDefault();
+    for(const t of e.changedTouches){
+      if(t.clientX < innerWidth/2 && moveId === null){
+        moveId = t.identifier; stickO = {x:t.clientX,y:t.clientY};
+        stick.style.left = (t.clientX-62)+'px'; stick.style.top = (t.clientY-62)+'px'; stick.style.opacity = 1;
+      }else if(lookId === null){ lookId = t.identifier; lookLast = {x:t.clientX,y:t.clientY}; }
+    }
+  }, {passive:false});
+  cv.addEventListener('touchmove', e=>{
+    e.preventDefault();
+    for(const t of e.changedTouches){
+      if(t.identifier === moveId){
+        let dx = t.clientX-stickO.x, dy = t.clientY-stickO.y;
+        const d = Math.hypot(dx,dy), R = 46;
+        if(d>R){ dx = dx/d*R; dy = dy/d*R; }
+        knob.style.transform = `translate(${dx}px,${dy}px)`;
+        stickV = {x:dx/R, y:dy/R};
+      }else if(t.identifier === lookId){
+        yaw -= (t.clientX-lookLast.x)*0.005; pitch -= (t.clientY-lookLast.y)*0.005;
+        pitch = Math.max(-1.35, Math.min(1.35, pitch));
+        lookLast = {x:t.clientX,y:t.clientY};
+      }
+    }
+  }, {passive:false});
+  const endT = e=>{
+    for(const t of e.changedTouches){
+      if(t.identifier === moveId){ moveId = null; stickV = {x:0,y:0}; knob.style.transform=''; stick.style.opacity = 0; }
+      if(t.identifier === lookId) lookId = null;
+    }
+  };
+  cv.addEventListener('touchend', endT, {passive:true});
+  cv.addEventListener('touchcancel', endT, {passive:true});
+}
+
+function loop(){
+  raf = requestAnimationFrame(loop);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  if(running && meshes.length){
+    let f = 0, s = 0;
+    if(keys['KeyW']||keys['ArrowUp']) f += 1;
+    if(keys['KeyS']||keys['ArrowDown']) f -= 1;
+    if(keys['KeyD']||keys['ArrowRight']) s += 1;
+    if(keys['KeyA']||keys['ArrowLeft']) s -= 1;
+    f -= stickV.y; s += stickV.x;
+
+    if(f || s){
+      const len = Math.hypot(f,s); f/=len; s/=len;
+      const speed = (keys['ShiftLeft']||keys['ShiftRight'] ? 6.0 : 2.9)*dt;
+      const fx = -Math.sin(yaw), fz = -Math.cos(yaw), sx = Math.cos(yaw), sz = -Math.sin(yaw);
+      const dir = new THREE.Vector3(fx*f+sx*s, 0, fz*f+sz*s).normalize();
+      let blocked = false;
+      if(collide){
+        rayF.set(camera.position, dir); rayF.far = 0.55;
+        blocked = rayF.intersectObjects(hitList,false).length > 0;
+      }
+      if(!blocked) camera.position.addScaledVector(dir, speed);
+    }
+    if(collide){
+      const probe = camera.position.clone(); probe.y += 4;
+      rayD.set(probe, DOWN); rayD.far = 40;
+      const hit = rayD.intersectObjects(hitList,false)[0];
+      const fy = hit ? hit.point.y : 0;
+      camera.position.y += (fy + eye - camera.position.y)*Math.min(1, dt*9);
+    }
+  }
+  camera.rotation.set(0,0,0);
+  camera.rotateY(yaw); camera.rotateX(pitch);
+  renderer.render(scene, camera);
+}
+
+function resize(){
+  if(!renderer) return;
+  camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+}
+addEventListener('resize', resize);
+
+// =====================================================================
+//  6. ROUTER
+// =====================================================================
+function route(){
+  const m = location.hash.match(/^#\/v\/([\w-]+)$/);
+  if(m) openModel(m[1]);
+  else{
+    running = false;
+    if(document.pointerLockElement) document.exitPointerLock();
+    viewer.style.display = 'none'; panel.style.display = 'block';
+    renderList();
+  }
+}
+addEventListener('hashchange', route);
+route();
+
+})();
+</script>
+</body>
+</html>
