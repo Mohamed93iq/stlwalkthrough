@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>لوحة الرفع — GitHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#0d1117;--slab:#161c24;--slab2:#1c242e;--line:#2b3644;
+        --paper:#d8dee6;--dim:#7d8b9c;--hot:#ff5a45;--cool:#3d8bff;--warm:#ffc247;--ok:#5ed6a0}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--ink);color:var(--paper);min-height:100%}
+  body{font-family:"IBM Plex Sans Arabic",system-ui,sans-serif;padding:26px 18px 70px}
+  .wrap{max-width:760px;margin:0 auto}
+  button{font-family:inherit;cursor:pointer}
+
+  header{border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:24px}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.24em;color:var(--dim);
+    text-transform:uppercase;direction:ltr;text-align:right;margin-bottom:8px}
+  h1{font-size:clamp(20px,4.4vw,27px);font-weight:600}
+  header p{color:var(--dim);font-size:13px;margin-top:7px;line-height:1.7}
+  header a{color:var(--cool)}
+
+  .card{background:var(--slab);border:1px solid var(--line);border-radius:3px;padding:18px;margin-bottom:14px}
+  .card h2{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.2em;color:var(--dim);
+    font-weight:400;direction:ltr;text-align:right;margin-bottom:14px}
+
+  label{display:block;font-size:12px;color:var(--dim);margin:13px 0 6px}
+  label:first-of-type{margin-top:0}
+  input[type=text],input[type=password]{width:100%;background:var(--ink);border:1px solid var(--line);
+    border-radius:3px;color:var(--paper);padding:11px 12px;font-family:"IBM Plex Mono",monospace;font-size:13px;direction:ltr}
+  input:focus{outline:none;border-color:var(--cool)}
+  .two{display:flex;gap:10px}
+  .two>div{flex:1}
+
+  #drop{border:1px dashed var(--line);border-radius:3px;padding:34px 18px;text-align:center;cursor:pointer;transition:.18s}
+  #drop.hot{border-color:var(--hot);background:#1a2029}
+  #drop .big{font-size:15px;margin-bottom:6px}
+  #drop .sub{font-size:12px;color:var(--dim);line-height:1.8}
+
+  .file{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}
+  .file:last-child{border-bottom:0}
+  .dot{width:12px;height:12px;border-radius:2px;flex:none}
+  .file .p{flex:1;font-family:"IBM Plex Mono",monospace;font-size:11.5px;direction:ltr;text-align:left;
+    color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .file select{background:var(--ink);border:1px solid var(--line);color:var(--paper);border-radius:3px;
+    padding:5px 7px;font-family:inherit;font-size:12px}
+  .file .sz{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--dim);flex:none}
+
+  .units{display:flex;gap:8px}
+  .units button{flex:1;background:var(--ink);border:1px solid var(--line);border-radius:3px;color:var(--dim);padding:10px;font-size:13px}
+  .units button.on{border-color:var(--warm);color:var(--warm)}
+
+  .primary{width:100%;margin-top:16px;background:var(--hot);color:#140b09;border:0;border-radius:3px;
+    padding:14px;font-size:14.5px;font-weight:600}
+  .primary:disabled{background:var(--slab2);color:var(--dim)}
+  .ghost{background:var(--slab2);border:1px solid var(--line);color:var(--paper);border-radius:3px;padding:10px 14px;font-size:13px}
+
+  .note{font-size:11.5px;color:var(--dim);line-height:1.85;margin-top:12px}
+  .note b{color:var(--warm);font-weight:500}
+  .warn{border-color:var(--hot)}
+  .warn .note b{color:var(--hot)}
+
+  #log{font-family:"IBM Plex Mono",monospace;font-size:11.5px;direction:ltr;text-align:left;line-height:1.9;
+    max-height:230px;overflow-y:auto;color:var(--dim)}
+  #log .ok{color:var(--ok)}
+  #log .err{color:var(--hot)}
+  #log .hi{color:var(--paper)}
+
+  .done{background:var(--slab2);border:1px solid var(--ok);border-radius:3px;padding:14px;margin-top:14px;display:none}
+  .done a{color:var(--ok);font-family:"IBM Plex Mono",monospace;font-size:12px;direction:ltr;
+    display:block;margin-top:8px;word-break:break-all}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">admin · github deploy</div>
+    <h1>لوحة الرفع</h1>
+    <p>اسحب مجلد البيت — يرفع ملفات STL على GitHub ويحدّث <code>models.json</code> بكومِت واحد.</p>
+  </header>
+
+  <div class="card">
+    <h2>REPOSITORY</h2>
+    <div class="two">
+      <div><label for="owner">اسم المستخدم</label><input type="text" id="owner" placeholder="ibrahim" dir="ltr"></div>
+      <div><label for="repo">اسم الريبو</label><input type="text" id="repo" placeholder="stl-walkthrough" dir="ltr"></div>
+    </div>
+    <div class="two">
+      <div><label for="branch">الفرع</label><input type="text" id="branch" value="main" dir="ltr"></div>
+      <div><label for="jsonPath">مسار ملف الفهرس</label><input type="text" id="jsonPath" value="models.json" dir="ltr"></div>
+    </div>
+    <label for="token">Personal Access Token</label>
+    <input type="password" id="token" placeholder="github_pat_..." dir="ltr">
+    <div class="note">
+      أنشئه من <b>github.com/settings/personal-access-tokens</b> → Fine-grained →
+      اختر الريبو → Repository permissions → <b>Contents: Read and write</b>.
+    </div>
+    <button class="ghost" id="saveCfg" style="margin-top:14px">احفظ الإعدادات بالمتصفح</button>
+    <button class="ghost" id="testCfg" style="margin-top:14px">افحص الاتصال</button>
+  </div>
+
+  <div class="card warn">
+    <div class="note"><b>تنبيه أمني:</b> التوكن ينحفظ بمتصفح جهازك فقط وما يُرسل إلا لـ GitHub مباشرة.
+    مع ذلك، <b>لا ترفع هذه الصفحة على الاستضازة العامة</b> إذا يستخدم الموقع أشخاص آخرون — خلّها بجهازك
+    وشغّلها محلياً بأمر <code>python3 -m http.server</code>.</div>
+  </div>
+
+  <div class="card">
+    <h2>MODEL FOLDER</h2>
+    <div id="drop">
+      <div class="big">اسحب مجلد البيت هنا</div>
+      <div class="sub">أو اضغط لاختيار المجلد — كل ملفات STL بداخله تنرفع<br>الأسماء تحدد اللون تلقائياً: walls · lighting · power · data</div>
+      <input type="file" id="dirInput" webkitdirectory directory multiple hidden>
+      <input type="file" id="fileInput" accept=".stl" multiple hidden>
+    </div>
+    <div id="files"></div>
+  </div>
+
+  <div class="card" id="metaCard" style="display:none">
+    <h2>DETAILS</h2>
+    <label for="nameInput">اسم البيت (يظهر بالموقع)</label>
+    <input type="text" id="nameInput" placeholder="بيت الكرادة" dir="rtl" style="font-family:inherit;direction:rtl;text-align:right">
+    <label for="slugInput">اسم المجلد داخل models/ <span id="slugHint"></span></label>
+    <input type="text" id="slugInput" placeholder="beit-karrada" dir="ltr">
+    <label>وحدة القياس</label>
+    <div class="units" id="units">
+      <button data-u="0.001">مليمتر</button>
+      <button data-u="0.01">سنتيمتر</button>
+      <button data-u="1" class="on">متر</button>
+    </div>
+    <button class="primary" id="pushBtn">ارفع على GitHub وحدّث الفهرس</button>
+    <div class="done" id="done">
+      <div style="font-size:13px">تم النشر. الرابط جاهز خلال دقيقة:</div>
+      <a id="doneLink" target="_blank" rel="noopener"></a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>LOG</h2>
+    <div id="log">في انتظار الرفع…</div>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+const $ = s => document.querySelector(s);
+const API = 'https://api.github.com';
+
+// ---------- config persistence ----------
+const CFG = ['owner','repo','branch','jsonPath','token'];
+function loadCfg(){
+  try{
+    const c = JSON.parse(localStorage.getItem('gh-cfg') || '{}');
+    CFG.forEach(k=>{ if(c[k] !== undefined) $('#'+k).value = c[k]; });
+  }catch(e){}
+}
+function saveCfg(){
+  const c = {}; CFG.forEach(k=> c[k] = $('#'+k).value.trim());
+  try{ localStorage.setItem('gh-cfg', JSON.stringify(c)); log('الإعدادات انحفظت بالمتصفح', 'ok'); }
+  catch(e){ log('تعذّر الحفظ: ' + e.message, 'err'); }
+}
+loadCfg();
+$('#saveCfg').onclick = saveCfg;
+
+function log(msg, cls){
+  const l = $('#log');
+  if(l.textContent === 'في انتظار الرفع…') l.textContent = '';
+  const d = document.createElement('div');
+  if(cls) d.className = cls;
+  d.textContent = msg;
+  l.appendChild(d); l.scrollTop = l.scrollHeight;
+}
+
+// ---------- layer colouring ----------
+const RULES = [
+  {k:['wall','حيط','جدار'],            name:'حيطان', color:'#d9d5cc', structure:true},
+  {k:['light','انار','إنار'],          name:'إنارة', color:'#ff5a45'},
+  {k:['power','socket','باور','فيش'],  name:'باور',  color:'#3d8bff'},
+  {k:['data','net','داتا','شبك'],      name:'داتا',  color:'#ffc247'},
+  {k:['box','device','علب','مفتاح'],   name:'علب',   color:'#8c95a3'}
+];
+const SPARE = ['#5ed6a0','#c07dff','#ff9d4d','#4fd8e8'];
+function classify(fname, i){
+  const n = fname.toLowerCase();
+  for(const r of RULES) if(r.k.some(x=>n.includes(x)))
+    return {name:r.name, color:r.color, structure:!!r.structure};
+  return {name: fname.replace(/\.stl$/i,''), color: SPARE[i % SPARE.length], structure: i === 0};
+}
+const slugify = s => (s||'').trim().toLowerCase().replace(/[^\w-]+/g,'-')
+  .replace(/^-+|-+$/g,'').slice(0,40) || 'model';
+const fmt = b => b < 1048576 ? (b/1024).toFixed(0)+' KB' : (b/1048576).toFixed(1)+' MB';
+
+// ---------- picking files ----------
+let picked = [];
+const drop = $('#drop');
+const isMobile = matchMedia('(pointer:coarse)').matches || 'ontouchstart' in window;
+const supportsDir = 'webkitdirectory' in document.createElement('input') && !isMobile;
+drop.onclick = ()=> (supportsDir ? $('#dirInput') : $('#fileInput')).click();
+if(!supportsDir){
+  drop.querySelector('.big').textContent = 'اضغط لاختيار ملفات STL';
+  drop.querySelector('.sub').innerHTML =
+    'متصفح الموبايل ما يدعم رفع مجلد كامل — اختر الملفات مباشرة<br>' +
+    'اضغط مطوّل لتحديد أكثر من ملف · واكتب اسم المجلد بنفسك تحت';
+}
+['dragover','dragenter'].forEach(e=>drop.addEventListener(e, ev=>{ev.preventDefault();drop.classList.add('hot')}));
+['dragleave','drop'].forEach(e=>drop.addEventListener(e, ev=>{ev.preventDefault();drop.classList.remove('hot')}));
+drop.addEventListener('drop', ev=>{ ev.preventDefault(); take(ev.dataTransfer.files); });
+$('#dirInput').onchange = e=> take(e.target.files);
+$('#fileInput').onchange = e=> take(e.target.files);
+
+function take(fileList){
+  const list = [...fileList].filter(f=>/\.stl$/i.test(f.name));
+  if(!list.length) return log('ما اكو ملفات STL بالمجلد', 'err');
+  picked = list.map((f,i)=>{
+    const c = classify(f.name, i);
+    return {file:f, name:c.name, color:c.color, structure:c.structure};
+  });
+  // folder name from the drop, if the browser gave us paths
+  const rel = list[0].webkitRelativePath || '';
+  const folder = rel.includes('/') ? rel.split('/')[0] : '';
+  if(folder){
+    if(!$('#nameInput').value) $('#nameInput').value = folder;
+    if(!$('#slugInput').value) $('#slugInput').value = slugify(folder);
+  }
+  renderFiles();
+  $('#metaCard').style.display = '';
+  if(!folder){
+    $('#slugHint').innerHTML = '<span style="color:#ff5a45">— اكتبه بنفسك</span>';
+    $('#slugInput').focus();
+  }
+  log(`تم اختيار ${picked.length} ملف`, 'hi');
+}
+
+function renderFiles(){
+  const box = $('#files'); box.innerHTML = '';
+  picked.forEach((p, i)=>{
+    const row = document.createElement('div'); row.className = 'file';
+    row.innerHTML = `<i class="dot" style="background:${p.color}"></i>
+      <select></select>
+      <span class="p">${p.file.webkitRelativePath || p.file.name}</span>
+      <span class="sz">${fmt(p.file.size)}</span>`;
+    const sel = row.querySelector('select');
+    RULES.concat([{name:'أخرى', color:p.color}]).forEach(r=>{
+      const o = document.createElement('option'); o.value = r.name; o.textContent = r.name;
+      if(r.name === p.name) o.selected = true;
+      sel.appendChild(o);
+    });
+    sel.onchange = ()=>{
+      const r = RULES.find(x=>x.name === sel.value);
+      if(r){ p.name = r.name; p.color = r.color; p.structure = !!r.structure; }
+      else p.name = sel.value;
+      renderFiles();
+    };
+    box.appendChild(row);
+  });
+}
+
+let unit = 1;
+document.querySelectorAll('#units button').forEach(b=>{
+  b.onclick = ()=>{ document.querySelectorAll('#units button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on'); unit = parseFloat(b.dataset.u); };
+});
+$('#nameInput').oninput = ()=>{ if(!$('#slugInput').value) $('#slugInput').value = slugify($('#nameInput').value); };
+
+// ---------- GitHub API ----------
+function cfg(){
+  return {
+    owner: $('#owner').value.trim(),
+    repo: $('#repo').value.trim(),
+    branch: $('#branch').value.trim() || 'main',
+    jsonPath: $('#jsonPath').value.trim() || 'models.json',
+    token: $('#token').value.trim()
+  };
+}
+async function gh(path, opts){
+  const c = cfg();
+  const res = await fetch(API + path, Object.assign({}, opts, {
+    headers: Object.assign({
+      'Authorization': 'Bearer ' + c.token,
+      'Accept': 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28'
+    }, (opts && opts.headers) || {})
+  }));
+  if(!res.ok){
+    let d = ''; try{ d = (await res.json()).message || ''; }catch(e){}
+    throw new Error(`${res.status} ${d}`);
+  }
+  return res.status === 204 ? null : res.json();
+}
+
+function toB64(buf){
+  const b = new Uint8Array(buf); let s = '';
+  for(let i=0;i<b.length;i+=0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i+0x8000));
+  return btoa(s);
+}
+const readBuf = f => new Promise((res,rej)=>{
+  const r = new FileReader(); r.onload = ()=>res(r.result); r.onerror = ()=>rej(r.error);
+  r.readAsArrayBuffer(f);
+});
+
+$('#testCfg').onclick = async ()=>{
+  const c = cfg();
+  if(!c.owner || !c.repo || !c.token) return log('املأ اسم المستخدم والريبو والتوكن', 'err');
+  try{
+    const r = await gh(`/repos/${c.owner}/${c.repo}`);
+    log(`الاتصال ناجح: ${r.full_name} · الفرع الافتراضي ${r.default_branch}`, 'ok');
+    if(r.default_branch !== c.branch) log(`تنبيه: الفرع المكتوب "${c.branch}" مو نفس الافتراضي`, 'err');
+  }catch(e){ log('فشل الاتصال: ' + e.message, 'err'); }
+};
+
+$('#pushBtn').onclick = async ()=>{
+  const c = cfg();
+  const btn = $('#pushBtn');
+  const slug = slugify($('#slugInput').value || $('#nameInput').value);
+  const name = $('#nameInput').value.trim() || slug;
+  if(!c.owner || !c.repo || !c.token) return log('الإعدادات ناقصة', 'err');
+  if(!picked.length) return log('ما اكو ملفات مختارة', 'err');
+
+  btn.disabled = true; btn.textContent = 'جاري الرفع…';
+  $('#done').style.display = 'none';
+  try{
+    // 1. current head
+    log('قراءة حالة الفرع…');
+    const ref = await gh(`/repos/${c.owner}/${c.repo}/git/ref/heads/${c.branch}`);
+    const headSha = ref.object.sha;
+    const headCommit = await gh(`/repos/${c.owner}/${c.repo}/git/commits/${headSha}`);
+    const baseTree = headCommit.tree.sha;
+
+    // 2. blobs for every STL
+    const tree = [];
+    for(const p of picked){
+      log(`رفع ${p.file.name}…`);
+      const blob = await gh(`/repos/${c.owner}/${c.repo}/git/blobs`, {
+        method:'POST',
+        body: JSON.stringify({content: toB64(await readBuf(p.file)), encoding:'base64'})
+      });
+      const fname = p.file.name;
+      tree.push({path:`models/${slug}/${fname}`, mode:'100644', type:'blob', sha:blob.sha});
+      p.path = fname;
+    }
+
+    // 3. read + patch models.json
+    log('تحديث models.json…');
+    let models = [];
+    try{
+      const cur = await gh(`/repos/${c.owner}/${c.repo}/contents/${encodeURIComponent(c.jsonPath)}?ref=${c.branch}`);
+      const txt = decodeURIComponent(escape(atob(cur.content.replace(/\n/g,''))));
+      const parsed = JSON.parse(txt);
+      models = Array.isArray(parsed) ? parsed : (parsed.models || []);
+    }catch(e){ log('ما اكو models.json — راح ينخلق جديد', 'hi'); }
+
+    const entry = {
+      id: 'm_' + slug,
+      name,
+      folder: slug,
+      unit,
+      parts: picked.map(p=>({name:p.name, file:p.path, color:p.color, structure:!!p.structure}))
+    };
+    const at = models.findIndex(m=>m.id === entry.id);
+    if(at >= 0){ models[at] = entry; log('البيت موجود مسبقاً — تم استبداله', 'hi'); }
+    else models.unshift(entry);
+
+    const jsonB64 = btoa(unescape(encodeURIComponent(JSON.stringify(models, null, 2) + '\n')));
+    const jsonBlob = await gh(`/repos/${c.owner}/${c.repo}/git/blobs`, {
+      method:'POST', body: JSON.stringify({content: jsonB64, encoding:'base64'})
+    });
+    tree.push({path:c.jsonPath, mode:'100644', type:'blob', sha:jsonBlob.sha});
+
+    // 4. tree + commit + move the branch
+    log('إنشاء الكومِت…');
+    const newTree = await gh(`/repos/${c.owner}/${c.repo}/git/trees`, {
+      method:'POST', body: JSON.stringify({base_tree: baseTree, tree})
+    });
+    const commit = await gh(`/repos/${c.owner}/${c.repo}/git/commits`, {
+      method:'POST',
+      body: JSON.stringify({message:`add model: ${name}`, tree:newTree.sha, parents:[headSha]})
+    });
+    await gh(`/repos/${c.owner}/${c.repo}/git/refs/heads/${c.branch}`, {
+      method:'PATCH', body: JSON.stringify({sha: commit.sha})
+    });
+
+    log(`تم — ${picked.length} ملف + models.json بكومِت واحد`, 'ok');
+    const url = `https://${c.owner}.github.io/${c.repo}/#/v/m_${slug}`;
+    $('#doneLink').textContent = url; $('#doneLink').href = url;
+    $('#done').style.display = 'block';
+
+    picked = []; $('#files').innerHTML = '';
+    $('#nameInput').value = ''; $('#slugInput').value = '';
+  }catch(e){
+    log('فشل: ' + e.message, 'err');
+    if(String(e.message).startsWith('401')) log('التوكن غلط أو منتهي', 'err');
+    if(String(e.message).startsWith('404')) log('تأكد من اسم الريبو والفرع وصلاحية Contents', 'err');
+  }
+  btn.disabled = false; btn.textContent = 'ارفع على GitHub وحدّث الفهرس';
+};
+
+})();
+</script>
+</body>
+</html>
