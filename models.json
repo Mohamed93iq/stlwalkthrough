@@ -1,3 +1,28 @@
 [
- 
+  {
+    "id": "m_test1",
+    "name": "تجربة 1",
+    "folder": "test1",
+    "unit": 1,
+    "parts": [
+      {
+        "name": "إنارة",
+        "file": "lighting.stl",
+        "color": "#ff5a45",
+        "structure": false
+      },
+      {
+        "name": "text",
+        "file": "text.stl",
+        "color": "#c07dff",
+        "structure": false
+      },
+      {
+        "name": "حيطان",
+        "file": "walls.stl",
+        "color": "#d9d5cc",
+        "structure": true
+      }
+    ]
+  }
 ]
