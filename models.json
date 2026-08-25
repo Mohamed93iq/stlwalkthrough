@@ -1,5 +1,31 @@
 [
   {
+    "id": "m_house1_test3",
+    "name": "بيت تجربة 3",
+    "folder": "house1_test3",
+    "unit": 1,
+    "parts": [
+      {
+        "name": "إنارة",
+        "file": "lighting.stl",
+        "color": "#ff5a45",
+        "structure": false
+      },
+      {
+        "name": "text",
+        "file": "text.stl",
+        "color": "#c07dff",
+        "structure": false
+      },
+      {
+        "name": "حيطان",
+        "file": "walls.stl",
+        "color": "#d9d5cc",
+        "structure": true
+      }
+    ]
+  },
+  {
     "id": "m_house1_test2",
     "name": "بيت تجربة 2",
     "folder": "house1_test2",
