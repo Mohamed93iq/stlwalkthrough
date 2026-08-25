@@ -63,6 +63,12 @@
   .warn{border-color:var(--hot)}
   .warn .note b{color:var(--hot)}
 
+  #repoList{margin-top:12px}
+  #repoList button{display:block;width:100%;text-align:right;background:var(--ink);
+    border:1px solid var(--line);border-radius:3px;color:var(--paper);padding:10px 12px;
+    margin-bottom:6px;font-family:"IBM Plex Mono",monospace;font-size:12px;direction:ltr}
+  #repoList button:hover{border-color:var(--cool)}
+  #repoList button small{color:var(--dim);float:right}
   #log{font-family:"IBM Plex Mono",monospace;font-size:11.5px;direction:ltr;text-align:left;line-height:1.9;
     max-height:230px;overflow-y:auto;color:var(--dim)}
   #log .ok{color:var(--ok)}
@@ -98,8 +104,10 @@
       أنشئه من <b>github.com/settings/personal-access-tokens</b> → Fine-grained →
       اختر الريبو → Repository permissions → <b>Contents: Read and write</b>.
     </div>
-    <button class="ghost" id="saveCfg" style="margin-top:14px">احفظ الإعدادات بالمتصفح</button>
+    <button class="ghost" id="listRepos" style="margin-top:14px">اعرض ريبوهاتي</button>
+    <button class="ghost" id="saveCfg" style="margin-top:14px">احفظ الإعدادات</button>
     <button class="ghost" id="testCfg" style="margin-top:14px">افحص الاتصال</button>
+    <div id="repoList"></div>
   </div>
 
   <div class="card warn">
@@ -268,6 +276,7 @@ $('#nameInput').oninput = ()=>{ if(!$('#slugInput').value) $('#slugInput').value
 
 // ---------- GitHub API ----------
 function cfg(){
+  CFG.forEach(k=>{ $('#'+k).value = $('#'+k).value.trim(); });
   return {
     owner: $('#owner').value.trim(),
     repo: $('#repo').value.trim(),
@@ -302,6 +311,73 @@ const readBuf = f => new Promise((res,rej)=>{
   r.readAsArrayBuffer(f);
 });
 
+// warn early if the page was opened straight from disk
+if(location.protocol === 'file:'){
+  log('تحذير: الصفحة مفتوحة بـ file:// — الاتصال بـ GitHub راح يفشل', 'err');
+  log('شغّلها بسيرفر محلي: python3 -m http.server 8080', 'err');
+}
+
+async function diagnose(){
+  log('— تشخيص —', 'hi');
+  if(location.protocol === 'file:'){
+    log('السبب: الصفحة مفتوحة من الملف مباشرة (file://)', 'err');
+    log('الحل: python3 -m http.server 8080 ثم localhost:8080/admin.html', 'err');
+    return;
+  }
+  if(!navigator.onLine){ log('السبب: ما اكو اتصال إنترنت', 'err'); return; }
+  try{
+    const r = await fetch(API + '/rate_limit', {headers:{'Accept':'application/vnd.github+json'}});
+    if(r.ok){
+      log('الوصول لـ api.github.com شغّال — فالمشكلة بالتوكن أو بأسماء الريبو', 'hi');
+    }else{
+      log('api.github.com يرد بـ ' + r.status, 'err');
+    }
+  }catch(e){
+    log('api.github.com محجوب من الشبكة أو من إضافة بالمتصفح', 'err');
+    log('جرّب: نافذة خفية · إطفاء مانع الإعلانات · بيانات الموبايل بدل الواي فاي', 'err');
+  }
+}
+
+$('#listRepos').onclick = async ()=>{
+  const box = $('#repoList'); box.innerHTML = '';
+  if(!$('#token').value.trim()) return log('حط التوكن أول', 'err');
+  log('جلب الريبوهات…');
+  let me;
+  try{ me = await gh('/user'); }
+  catch(e){
+    if(/failed to fetch|networkerror|load failed/i.test(e.message)) return diagnose();
+    log('التوكن مرفوض: ' + e.message, 'err');
+    return log('أنشئ توكن جديد وتأكد إنه Fine-grained ومو منتهي', 'err');
+  }
+  log('التوكن يخص الحساب: ' + me.login, 'ok');
+  $('#owner').value = me.login;
+
+  let repos = [];
+  try{ repos = await gh('/user/repos?per_page=100&sort=updated'); }
+  catch(e){ return log('تعذّر جلب القائمة: ' + e.message, 'err'); }
+
+  if(!repos.length){
+    log('التوكن ما يشوف أي ريبو — راجع Repository access بإعدادات التوكن', 'err');
+    return;
+  }
+  log(`التوكن يشوف ${repos.length} ريبو — اختر وحدة`, 'hi');
+  repos.forEach(r=>{
+    const b = document.createElement('button');
+    b.innerHTML = `${r.full_name} <small>${r.private ? 'private' : 'public'} · ${r.default_branch}</small>`;
+    b.onclick = ()=>{
+      $('#owner').value = r.owner.login;
+      $('#repo').value = r.name;
+      $('#branch').value = r.default_branch;
+      box.innerHTML = '';
+      saveCfg();
+      log(`تم اختيار ${r.full_name} على الفرع ${r.default_branch}`, 'ok');
+      if(r.private) log('تنبيه: الريبو private — GitHub Pages المجاني ما يشتغل عليه', 'err');
+      $('#testCfg').click();
+    };
+    box.appendChild(b);
+  });
+};
+
 $('#testCfg').onclick = async ()=>{
   const c = cfg();
   if(!c.owner || !c.repo || !c.token) return log('املأ اسم المستخدم والريبو والتوكن', 'err');
@@ -309,7 +385,14 @@ $('#testCfg').onclick = async ()=>{
     const r = await gh(`/repos/${c.owner}/${c.repo}`);
     log(`الاتصال ناجح: ${r.full_name} · الفرع الافتراضي ${r.default_branch}`, 'ok');
     if(r.default_branch !== c.branch) log(`تنبيه: الفرع المكتوب "${c.branch}" مو نفس الافتراضي`, 'err');
-  }catch(e){ log('فشل الاتصال: ' + e.message, 'err'); }
+  }catch(e){
+    log('فشل الاتصال: ' + e.message, 'err');
+    if(/failed to fetch|networkerror|load failed/i.test(e.message)) await diagnose();
+    else if(String(e.message).startsWith('404')){
+      log('404 = التوكن ما يشوف هذا الريبو (اسم غلط أو Repository access ما يشمله)', 'err');
+      log('اضغط «اعرض ريبوهاتي» واختر من القائمة بدل الكتابة اليدوية', 'hi');
+    }
+  }
 };
 
 $('#pushBtn').onclick = async ()=>{
@@ -392,6 +475,7 @@ $('#pushBtn').onclick = async ()=>{
     $('#nameInput').value = ''; $('#slugInput').value = '';
   }catch(e){
     log('فشل: ' + e.message, 'err');
+    if(/failed to fetch|networkerror|load failed/i.test(e.message)) await diagnose();
     if(String(e.message).startsWith('401')) log('التوكن غلط أو منتهي', 'err');
     if(String(e.message).startsWith('404')) log('تأكد من اسم الريبو والفرع وصلاحية Contents', 'err');
   }
