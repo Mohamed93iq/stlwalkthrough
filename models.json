@@ -1,5 +1,19 @@
 [
   {
+    "id": "m_test3",
+    "name": "test3",
+    "folder": "test3",
+    "unit": 1,
+    "parts": [
+      {
+        "name": "3d",
+        "file": "3d.stl",
+        "color": "#5ed6a0",
+        "structure": true
+      }
+    ]
+  },
+  {
     "id": "m_test1",
     "name": "تجربة 1",
     "folder": "test1",
