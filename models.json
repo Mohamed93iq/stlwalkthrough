@@ -25,31 +25,36 @@
       }
     ]
   },
-   {
+  {
     "id": "m_test2",
-    "name": "نموذج",
-    "folder": "testnew",
+    "name": "test2",
+    "folder": "test2",
     "unit": 1,
     "parts": [
       {
-        "name": "إنارة",
-        "file": "wires.stl",
-        "color": "#ff5a45",
+        "name": "علب",
+        "file": "PIPES.stl",
+        "color": "#8c95a3",
         "structure": false
       },
       {
-        "name": "text",
+        "name": "داتا",
         "file": "text.stl",
-        "color": "#c07dff",
+        "color": "#ffc247",
         "structure": false
       },
       {
         "name": "حيطان",
-        "file": "untitled.stl",
+        "file": "WALLS.stl",
         "color": "#d9d5cc",
         "structure": true
+      },
+      {
+        "name": "إنارة",
+        "file": "WIRES.stl",
+        "color": "#ff5a45",
+        "structure": false
       }
     ]
   }
-
 ]
